@@ -1,0 +1,21 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t test_image -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run test_image yarn test -- --coverage
+
+after_success:
+  - docker build -t multi_client ./client
+  - docker build -t multi_server ./server
+  - docker build -t multi_worker ./worker
+  - docker build -t multi_nginx ./nginx
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push multi_client
+  - docker push multi_server
+  - docker push multi_worker
+  - docker push multi_nginx
